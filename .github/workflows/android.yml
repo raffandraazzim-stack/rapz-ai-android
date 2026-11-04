@@ -1,7 +1,5 @@
-name: Build RAPZ AI APK
-
-on:
-  workflow_dispatch:
+name: Build RAPZ AI APK on:
+workflow_dispatch:
   push:
     branches:
       - main
