@@ -1,0 +1,44 @@
+name: Build RAPZ AI APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ambil kode proyek
+        uses: actions/checkout@v4
+
+      - name: Siapkan Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Ekstrak folder aplikasi
+        run: |
+          mkdir -p app
+          unzip -o app.zip -d app
+          if [ -d app/app/src ]; then
+            cp -a app/app/. app/
+            rm -rf app/app
+          fi
+
+      - name: Siapkan Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        run: gradle assembleDebug
+
+      - name: Simpan APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RAPZ-AI-APK
+          path: app/build/outputs/apk/debug/*.apk
