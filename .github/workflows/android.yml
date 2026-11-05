@@ -1,5 +1,7 @@
-name: Build RAPZ AI APK on:
-workflow_dispatch:
+name: Build RAPZ AI APK
+
+on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -12,19 +14,25 @@ jobs:
       - name: Ambil kode proyek
         uses: actions/checkout@v4
 
-      - name: Siapkan Java
+      - name: Siapkan Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Ekstrak folder aplikasi
+      - name: Ekstrak aplikasi
         run: |
           mkdir -p app
           unzip -o app.zip -d app
-          if [ -d app/app/src ]; then
+          if [ -d app/app ]; then
             cp -a app/app/. app/
             rm -rf app/app
+          fi
+
+      - name: Samakan target Java ke 17
+        run: |
+          if [ -f app/build.gradle.kts ]; then
+            sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g; s/JavaVersion.VERSION_8/JavaVersion.VERSION_17/g; s/jvmTarget = "1.8"/jvmTarget = "17"/g; s/jvmTarget.set(JvmTarget.JVM_1_8)/jvmTarget.set(JvmTarget.JVM_17)/g' app/build.gradle.kts
           fi
 
       - name: Siapkan Gradle
@@ -40,3 +48,4 @@ jobs:
         with:
           name: RAPZ-AI-APK
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
