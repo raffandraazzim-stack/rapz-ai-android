@@ -29,11 +29,34 @@ jobs:
             rm -rf app/app
           fi
 
-      - name: Samakan target Java ke 17
+      - name: Perbaiki target Java dan Kotlin
         run: |
-          if [ -f app/build.gradle.kts ]; then
-            sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g; s/JavaVersion.VERSION_8/JavaVersion.VERSION_17/g; s/jvmTarget = "1.8"/jvmTarget = "17"/g; s/jvmTarget.set(JvmTarget.JVM_1_8)/jvmTarget.set(JvmTarget.JVM_17)/g' app/build.gradle.kts
-          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle.kts")
+          if not p.exists():
+              raise SystemExit("File app/build.gradle.kts tidak ditemukan")
+          s = p.read_text()
+          s = s.replace("JavaVersion.VERSION_1_8", "JavaVersion.VERSION_17")
+          s = s.replace("JavaVersion.VERSION_8", "JavaVersion.VERSION_17")
+          s = s.replace('jvmTarget = "1.8"', 'jvmTarget = "17"')
+          s += """
+
+          android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          }
+
+          tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+          """
+          p.write_text(s)
+          PY
 
       - name: Siapkan Gradle
         uses: gradle/actions/setup-gradle@v4
